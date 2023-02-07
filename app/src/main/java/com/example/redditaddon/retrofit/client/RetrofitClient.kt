@@ -1,4 +1,4 @@
-package com.example.redditaddon.retrofit
+package com.example.redditaddon.retrofit.client
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -15,6 +15,6 @@ object RetrofitClient {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
             }
-            return this.retrofit!!
+            return retrofit!!
         }
 }

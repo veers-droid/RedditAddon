@@ -1,4 +1,4 @@
-package com.example.redditaddon.services
+package com.example.redditaddon.retrofit.services
 
 import com.example.redditaddon.model.Publication
 import retrofit2.Call
