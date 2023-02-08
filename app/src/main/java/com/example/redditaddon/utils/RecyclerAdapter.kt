@@ -18,7 +18,7 @@ class RecyclerAdapter (
     private val mainBind: ActivityMainBinding
 ) : RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
 
-    var publications: List<Children> = emptyList()
+    private var publications: List<Children> = emptyList()
         @SuppressLint("NotifyDataSetChanged")
         set(newValue) {
             field = newValue
@@ -32,48 +32,15 @@ class RecyclerAdapter (
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        val thumbNail = publications[position].data.thumbnail
-        val thumbNailHeight = publications[position].data.thumbnail_height * 5
-        val thumbNailWidth = publications[position].data.thumbnail_width * 5
-
-        val postTime = countPostTime(position)
-
-        val context = holder.itemView.context
-
-        with(holder.binding) {
-            author = publications[position].data.subreddit_name_prefixed
-            time = postTime
-            text = publications[position].data.title
-
-            comments = publications[position].data.num_comments.toString() + " comments"
-
-            //setting up the photo via Picasso library
-            Picasso.with(context)
-                .load(thumbNail)
-                .noPlaceholder()
-                .resize(thumbNailWidth, thumbNailHeight)
-                .into(image)
-
-            //if tap on the image open it on fullscreen
-            image.setOnClickListener {
-                Picasso.with(context)
-                    .load(thumbNail)
-                    .into(mainBind.scaledImg)
-
-                mainBind.mainView.visibility = View.GONE
-                mainBind.scaledLay.visibility = View.VISIBLE
-            }
-
-        }
-
+        holder.drawItem(publications[position])
     }
 
-    private fun countPostTime(position: Int): String {
+    private fun countPostTime(item: Children): String {
         val curDate = Date.from(Instant.now())
         val curDataFormatted =  android.text.format.DateFormat.format("MMMM, dd, yyyy HH:mm:ss", curDate).toString()
 
         val calendar = Calendar.getInstance(Locale.getDefault())
-        calendar.timeInMillis = (publications[position].data.created_utc * 1000L).toLong()
+        calendar.timeInMillis = (item.data.created_utc * 1000L).toLong()
         val publicationTime: String = android.text.format.DateFormat.format("MMMM, dd, yyyy HH:mm:ss", calendar).toString()
 
         val dateFormatInput = DateTimeFormatter.ofPattern("MMMM, dd, yyyy HH:mm:ss")
@@ -92,6 +59,51 @@ class RecyclerAdapter (
 
     override fun getItemCount(): Int = publications.size
 
+    inner class MyViewHolder (private val binding: RecycleviewItemBinding) : RecyclerView.ViewHolder(binding.root)
+    {
+        fun drawItem(item: Children) {
+            val thumbNail = item.data.thumbnail
+            var thumbNailHeight = 0
+            var thumbNailWidth = 0
+            if (thumbNail != "default") {
+                thumbNailHeight = item.data.thumbnail_height * 5
+                thumbNailWidth = item.data.thumbnail_width * 5
+            }
 
-    inner class MyViewHolder (val binding: RecycleviewItemBinding) : RecyclerView.ViewHolder(binding.root)
+            val context = itemView.context
+            val postTime = countPostTime(item)
+
+            with(binding) {
+                author = item.data.subreddit_name_prefixed
+                text = item.data.title
+                comments = item.data.num_comments.toString() + " comments"
+                time = postTime
+
+                //setting up the photo via Picasso library
+                if (thumbNail != "default") {
+                    Picasso.with(context)
+                        .load(thumbNail)
+                        .noPlaceholder()
+                        .resize(thumbNailWidth, thumbNailHeight)
+                        .into(image)
+                    
+                    //if tap on the image open it on fullscreen
+                    image.setOnClickListener {
+                        Picasso.with(context)
+                            .load(thumbNail)
+                            .into(mainBind.scaledImg)
+
+                        mainBind.mainView.visibility = View.GONE
+                        mainBind.scaledLay.visibility = View.VISIBLE
+                    }
+                }
+            }
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun updateAdapter(publications: List<Children>) {
+        this.publications = publications
+        notifyDataSetChanged()
+    }
 }

@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
@@ -19,25 +18,24 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.drawToBitmap
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.redditaddon.R
 import com.example.redditaddon.databinding.ActivityMainBinding
-import com.example.redditaddon.model.Children
-import com.example.redditaddon.model.Publication
-import com.example.redditaddon.retrofit.client.RetrofitClient
-import com.example.redditaddon.retrofit.services.RetrofitService
 import com.example.redditaddon.utils.RecyclerAdapter
-import retrofit2.*
+import com.example.redditaddon.viewmodels.MainActivityViewModel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 
 const val REQUEST_CODE = 1
+const val POSITION_KEY = "pos"
 class MainActivity : AppCompatActivity() {
-    lateinit var binding: ActivityMainBinding
-    private var retrofitService: RetrofitService? = null
-    var adapter: RecyclerAdapter? = null
-    private var publicationsList: MutableList<Children> = ArrayList()
+    private lateinit var binding: ActivityMainBinding
+
+    private var adapter: RecyclerAdapter? = null
+    private lateinit var manager: LinearLayoutManager
+    private lateinit var myViewModel: MainActivityViewModel
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,24 +43,20 @@ class MainActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         title = "reddit top"
 
-        retrofitService = RetrofitClient.client.create(RetrofitService::class.java)
+        binding.lifecycleOwner = this
 
+        initAdapter()
 
-        binding.articles!!.adapter = adapter
-
-        adapter = RecyclerAdapter(binding)
-
-
-        val manager = LinearLayoutManager(this)
+        myViewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
+        myViewModel.getAllPublications()
+        myViewModel.observePublicationData().observe(this) {
+            adapter!!.updateAdapter(it)
+        }
 
         with(binding) {
-
-            articles.layoutManager = manager
-            articles.adapter = adapter
-
             scaledImg.setOnClickListener {
                 scaledLay.visibility = View.GONE
-                mainView.visibility = View.GONE
+                mainView.visibility = View.VISIBLE
             }
 
             saveButton.setOnClickListener {
@@ -76,34 +70,28 @@ class MainActivity : AppCompatActivity() {
                         REQUEST_CODE
                     )
                 }
-                binding.scaledLay.visibility = View.GONE
-                binding.mainView.visibility = View.VISIBLE
+                scaledLay.visibility = View.GONE
+                mainView.visibility = View.VISIBLE
             }
         }
-        getPublications()
-
+        myViewModel.getAllPublications()
     }
 
-    private fun getPublications() {
-        val call = retrofitService!!.getTopPublications()
-        call.enqueue(object : Callback<Publication> {
-            override fun onResponse(
-                call: Call<Publication>,
-                response: Response<Publication>
-            ) {
-                Log.d("tag", "Total pubs: " + response.body()!!.data.children[0].data.subreddit_name_prefixed)
-                val pubs = response.body()
-                if (pubs != null) {
-                    publicationsList.addAll(pubs.data.children)
-                    adapter!!.publications = publicationsList
-                    adapter!!.notifyDataSetChanged()
-                }
-            }
+    private fun initAdapter() {
+        manager = LinearLayoutManager(this)
 
-            override fun onFailure(call: Call<Publication>, t: Throwable) {
-                Log.e("tag", "Got error: " + t.localizedMessage)
-            }
-        })
+        adapter = RecyclerAdapter(binding)
+
+        with(binding) {
+            articles.layoutManager = manager
+
+            articles.adapter = adapter
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(POSITION_KEY, manager.findFirstVisibleItemPosition())
     }
 
     private fun saveImage() {
