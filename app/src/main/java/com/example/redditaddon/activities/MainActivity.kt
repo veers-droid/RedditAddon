@@ -20,6 +20,7 @@ import androidx.core.view.drawToBitmap
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.redditaddon.R
 import com.example.redditaddon.databinding.ActivityMainBinding
 import com.example.redditaddon.utils.RecyclerAdapter
@@ -29,7 +30,6 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 
 const val REQUEST_CODE = 1
-const val POSITION_KEY = "pos"
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
@@ -47,16 +47,16 @@ class MainActivity : AppCompatActivity() {
 
         initAdapter()
 
-        myViewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
-        myViewModel.getAllPublications()
-        myViewModel.observePublicationData().observe(this) {
-            adapter!!.updateAdapter(it)
-        }
+        initViewModel()
 
         with(binding) {
             scaledImg.setOnClickListener {
                 scaledLay.visibility = View.GONE
                 mainView.visibility = View.VISIBLE
+            }
+
+            backToTop.setOnClickListener {
+                manager.scrollToPosition(0)
             }
 
             saveButton.setOnClickListener {
@@ -74,7 +74,6 @@ class MainActivity : AppCompatActivity() {
                 mainView.visibility = View.VISIBLE
             }
         }
-        myViewModel.getAllPublications()
     }
 
     private fun initAdapter() {
@@ -86,13 +85,51 @@ class MainActivity : AppCompatActivity() {
             articles.layoutManager = manager
 
             articles.adapter = adapter
+
+            articles.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+
+                    val totalItem = manager.itemCount
+                    val lastVisibleItem = manager.findLastVisibleItemPosition()
+
+                    if (manager.findFirstVisibleItemPosition() > 4) {
+                        binding.backToTop.visibility = View.VISIBLE
+                    } else {
+                        binding.backToTop.visibility = View.GONE
+                    }
+
+                    if (totalItem <= lastVisibleItem + totalItem / 2){
+                        adapter!!.loadMore?.onLoadMore()
+                    }
+                }
+            })
+
+            adapter!!.setLoadMore(object : RecyclerAdapter.MyLoadMore {
+                override fun onLoadMore() {
+                    val after = adapter!!.publications.lastOrNull()!!.data.name
+                    fillList(after)
+                }
+            })
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putInt(POSITION_KEY, manager.findFirstVisibleItemPosition())
+    private fun initViewModel() {
+        myViewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
+        myViewModel.getAllPublications()
+        myViewModel.observePublicationData().observe(this) {
+            adapter!!.updateAdapter(it)
+        }
     }
+
+    private fun fillList(after: String) {
+        adapter!!.publications.lastOrNull()
+        myViewModel.uploadPublications(after)
+        myViewModel.observePublicationData().observe(this) {
+            adapter!!.updateAdapter(it)
+        }
+    }
+
 
     private fun saveImage() {
         val bitmap = findViewById<ImageView>(R.id.scaledImg).drawToBitmap()

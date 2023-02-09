@@ -1,6 +1,7 @@
 package com.example.redditaddon.utils
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,17 +14,25 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.collections.ArrayList
 
 class RecyclerAdapter (
     private val mainBind: ActivityMainBinding
 ) : RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
 
-    private var publications: List<Children> = emptyList()
+    var publications: MutableList<Children> = ArrayList()
         @SuppressLint("NotifyDataSetChanged")
         set(newValue) {
             field = newValue
             notifyDataSetChanged()
         }
+
+    var loadMore: MyLoadMore? = null
+
+    @JvmName("setLoadMore1")
+    fun setLoadMore(loadMore: MyLoadMore?) {
+        this.loadMore = loadMore
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -63,12 +72,11 @@ class RecyclerAdapter (
     {
         fun drawItem(item: Children) {
             val thumbNail = item.data.thumbnail
-            var thumbNailHeight = 0
-            var thumbNailWidth = 0
-            if (thumbNail != "default") {
-                thumbNailHeight = item.data.thumbnail_height * 5
-                thumbNailWidth = item.data.thumbnail_width * 5
-            }
+
+            Log.d("author thumbNail", item.data.subreddit_name_prefixed + " " + thumbNail)
+
+            val thumbNailHeight = item.data.thumbnail_height * 5
+            val thumbNailWidth = item.data.thumbnail_width * 5
 
             val context = itemView.context
             val postTime = countPostTime(item)
@@ -79,14 +87,15 @@ class RecyclerAdapter (
                 comments = item.data.num_comments.toString() + " comments"
                 time = postTime
 
-                //setting up the photo via Picasso library
-                if (thumbNail != "default") {
+                if (thumbNail.endsWith(".jpg"))
+                {
+                    //setting up the photo via Picasso library
                     Picasso.with(context)
                         .load(thumbNail)
                         .noPlaceholder()
                         .resize(thumbNailWidth, thumbNailHeight)
                         .into(image)
-                    
+
                     //if tap on the image open it on fullscreen
                     image.setOnClickListener {
                         Picasso.with(context)
@@ -103,7 +112,12 @@ class RecyclerAdapter (
 
     @SuppressLint("NotifyDataSetChanged")
     fun updateAdapter(publications: List<Children>) {
-        this.publications = publications
+        this.publications.addAll(publications)
         notifyDataSetChanged()
+
+    }
+
+    interface MyLoadMore {
+        fun onLoadMore()
     }
 }
