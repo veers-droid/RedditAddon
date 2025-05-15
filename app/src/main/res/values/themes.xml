@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
     <style name="Theme.RedditAddon" parent="Theme.AppCompat.DayNight.DarkActionBar">
         <item name="colorPrimary">@android:color/transparent</item>
