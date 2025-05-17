@@ -1,7 +1,6 @@
 package com.example.redditaddon.activities.main
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,6 +19,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -88,7 +88,7 @@ class MainActivityCompose : ComponentActivity() {
                 LazyColumn(state = listState) {
                     items(publications) { post ->
                         PublicationItemView(post = post) {
-                            scaledImageUrl = post.thumbNail.image ?: ""
+                            scaledImageUrl = post.thumbNail.image
                             showScaledImage = true
                         }
                     }
@@ -130,6 +130,7 @@ class MainActivityCompose : ComponentActivity() {
                     contentScale = ContentScale.Crop
                 )
             }
+            HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(top = 5.dp))
         }
     }
 
