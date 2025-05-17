@@ -2,6 +2,7 @@ package com.example.redditaddon.app.dagger
 
 import android.app.Application
 import com.example.redditaddon.App
+import com.example.redditaddon.activities.main.MainActivityCompose
 import dagger.BindsInstance
 import dagger.Component
 import javax.inject.Singleton
@@ -9,7 +10,10 @@ import javax.inject.Singleton
 
 @Singleton
 @Component(modules = [
-    NetworkModule::class
+    NetworkModule::class,
+ViewModelModule::class,
+NetworkModule::class,
+AppModule::class
 ])
 interface AppComponent {
 
@@ -17,5 +21,8 @@ interface AppComponent {
     interface Factory{
         fun create(@BindsInstance applicationContext: Application):AppComponent
     }
+
     fun inject(app: App)
+
+    fun inject(activity :  MainActivityCompose)
 }
