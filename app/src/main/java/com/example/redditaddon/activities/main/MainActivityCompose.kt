@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,8 +40,6 @@ import androidx.lifecycle.ViewModelProvider
 import coil.compose.AsyncImage
 import com.example.redditaddon.App
 import com.example.redditaddon.model.PublicationItem
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
@@ -75,9 +74,9 @@ class MainActivityCompose : ComponentActivity() {
         mainViewModel.getAllPublications()
         Log.d("START", "viewmodel request end")
         var showScaledImage by remember { mutableStateOf(false) }
-        var backToTopVisible by remember { mutableStateOf(false) }
         var scaledImageUrl by remember { mutableStateOf("") }
         val listState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
 
         Box(modifier = Modifier.fillMaxSize()) {
             if (showScaledImage) {
@@ -97,7 +96,7 @@ class MainActivityCompose : ComponentActivity() {
 
             if (remember { derivedStateOf { listState.firstVisibleItemIndex } }.value > 4) {
                 BackToTopButton {
-                    CoroutineScope(Dispatchers.Main).launch {
+                    coroutineScope.launch {
                         listState.animateScrollToItem(0)
                     }
                 }
