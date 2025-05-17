@@ -1,6 +1,7 @@
 package com.example.redditaddon.model
 
 data class PublicationItem(
+    val id : String,
     val thumbNail : ThumbNail,
     val commentsCount: Int,
     val author : String,
