@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -26,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -37,6 +35,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.example.redditaddon.App
 import com.example.redditaddon.model.PublicationItem
@@ -70,8 +70,7 @@ class MainActivityCompose : ComponentActivity() {
 
     @Composable
     fun MainScreen() {
-        val publications by mainViewModel.publicationsLiveData.observeAsState(emptyList())
-        mainViewModel.getAllPublications()
+        val publications = mainViewModel.pagedPublications.collectAsLazyPagingItems()
         Log.d("START", "viewmodel request end")
         var showScaledImage by remember { mutableStateOf(false) }
         var scaledImageUrl by remember { mutableStateOf("") }
@@ -85,12 +84,25 @@ class MainActivityCompose : ComponentActivity() {
                 }
             } else {
                 LazyColumn(state = listState) {
-                    items(publications) { post ->
-                        PublicationItemView(post = post) {
+                    items(publications.itemCount) { index ->
+                        val post = publications[index]
+                        PublicationItemView(post = post!!) {
                             scaledImageUrl = post.thumbNail.image
                             showScaledImage = true
                         }
                     }
+                }
+
+
+                when (publications.loadState.append) {
+                    is LoadState.Loading -> {
+                         Text("Загрузка...")
+                    }
+                    is LoadState.Error -> {
+                        val e = publications.loadState.append as LoadState.Error
+                         Text("Ошибка: ${e.error.message}")
+                    }
+                    else -> {}
                 }
             }
 
