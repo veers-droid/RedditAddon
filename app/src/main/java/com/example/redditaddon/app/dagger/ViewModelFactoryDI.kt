@@ -1,7 +1,10 @@
 package com.example.redditaddon.app.dagger
 
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.MapKey
 import javax.inject.Inject
 import javax.inject.Provider
@@ -39,3 +42,16 @@ class ViewModelFactoryDI @Inject constructor(
 @Retention(AnnotationRetention.RUNTIME)
 @MapKey
 annotation class ViewModelKey(val value: KClass<out ViewModel>)
+
+@Composable
+inline fun <reified VM : ViewModel> daggerViewModel (
+    factory: ViewModelProvider.Factory
+) : VM {
+    val owner = LocalViewModelStoreOwner.current ?: error("No ViewModelStoreOwner was provided via LocalViewModelStoreOwner")
+
+    return viewModel(
+        modelClass = VM::class.java,
+        factory = factory,
+        viewModelStoreOwner = owner
+    )
+}

@@ -33,7 +33,9 @@ android {
         targetSdk 35
         versionCode 1
         versionName "1.0"
-
+        manifestPlaceholders = [
+                appAuthRedirectScheme: "myapp://auth"
+        ]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -62,8 +64,8 @@ dependencies {
     implementation 'androidx.activity:activity-compose:1.10.1'
     implementation 'androidx.compose.ui:ui:1.8.1'
     implementation 'androidx.compose.ui:ui-tooling-preview:1.8.1'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.9.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0'
     implementation 'androidx.compose.runtime:runtime-livedata:1.8.1'
     implementation 'androidx.navigation:navigation-compose:2.9.0'
     implementation 'androidx.core:core-ktx:1.16.0'
@@ -77,9 +79,11 @@ dependencies {
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
-    implementation "com.squareup.okhttp3:okhttp:4.10.0"
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"
     implementation "com.squareup.okhttp3:logging-interceptor:4.9.1"
     implementation "io.coil-kt:coil-compose:2.5.0"
     implementation "androidx.paging:paging-runtime-ktx:3.3.6"
     implementation "androidx.paging:paging-compose:3.3.6"
+    implementation 'net.openid:appauth:0.11.1'
+    implementation "androidx.navigation:navigation-compose:2.9.0"
 }
